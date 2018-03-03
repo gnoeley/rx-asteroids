@@ -32,7 +32,7 @@ describe('GeomeryFunctions', () => {
 
         it('should only have negative change in y-axis at πrad',
             expectToHaveTranslationForAngle(Math.PI, [0, -1]))
-            
+
     })
 
     describe('#translateToScreenCoordSpace(point)', () => {
@@ -57,6 +57,21 @@ describe('GeomeryFunctions', () => {
 
             // then
             expect(actualPoint).toEqual([10, 10])
+        })
+
+    })
+
+    describe('#translate(point, translation)', () => {
+
+        it('should return expected point', () => {
+            // given
+            const expectedPoint = [10, -3]
+
+            // when
+            const actualPoint = testSubject.translate([1, 3], [9, -6])
+
+            // then
+            expect(actualPoint).toEqual(expectedPoint)
         })
 
     })

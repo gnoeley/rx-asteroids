@@ -49,3 +49,7 @@ export function calculateTranslation(angle, distance) {
 export function translateToScreenCoordSpace([x, y]) {
     return [x, -y]
 }
+
+export function translate([pX, pY], [tX, tY]) {
+    return [pX+tX, pY+tY]
+}
