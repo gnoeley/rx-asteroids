@@ -1,26 +1,25 @@
 import keyPressed from './KeyPressedSource'
 import animationTimer from './AnimationTimer'
+import { clearCanvas, drawGeometry } from './Draw'
 import { calculateTranslation } from './GeometryFunctions'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
-import { filter, map, sample, scan, tap, withLatestFrom } from 'rxjs/operators';
+import { filter, map, scan, startWith, tap, withLatestFrom } from 'rxjs/operators';
 import { combineLatest } from 'rxjs/operator/combineLatest';
 
 const theCanvas = document.getElementById('the-canvas')
 
-const MIN_SPEED = 0
-const MAX_SPEED = 100
+const MIN_SPEED = 0 // px/s
+const MAX_SPEED = 100 // px/s
 
-const LATERAL_ACCELERATION = 10
-const ROTATIONAL_ACCELERATION = Math.PI / 2
+const LATERAL_ACCELERATION = 10 // px/s/s
+const ROTATIONAL_ACCELERATION = Math.PI / 2 // rad/s
 
 const distance = (speed, time) => speed * time
 
 const millisToSeconds = (millis) => millis / 1000
 
 const limit = (value, min, max) => Math.max(Math.min(value, max), min)
-
-const mapVertexRelativeToCenter = ([cX, cY], [vX, vY]) => [cX+vX, cY+vY]
 
 const counterClockwiseRotationMatrix = (angle) => [
     Math.cos(angle),  -Math.sin(angle),
@@ -65,11 +64,12 @@ const angle = deltaAngle.pipe(
             const nextAngle = currentAngle - rotation
             const fullRotation = 2 * Math.PI
             return nextAngle < 0 ? nextAngle + fullRotation : nextAngle % fullRotation 
-        }, 0)
+        }, 0),
+        startWith(0)
     )
 
 // Update Point subject
-deltaDistance.pipe(  
+deltaDistance.pipe(
         withLatestFrom(angle, point),
         filter(([distance, angle, point]) => distance),
         map(([distance, angle, point]) => {
@@ -88,26 +88,6 @@ deltaAngle.pipe(
     .subscribe(vertices)
 
 // Draw!
-Observable.combineLatest(point, vertices).pipe(
-        tap(() => {
-            const ctx = theCanvas.getContext("2d")
-            ctx.fillStyle = '#000'
-            ctx.fillRect(0, 0, 800, 600)
-        })
-    ).subscribe(([point, vertices]) => {
-        const ctx = theCanvas.getContext("2d")
-        ctx.strokeStyle = '#eee'
-        ctx.fillStyle = '#000'
-        ctx.lineWidth = 2
-
-        const relativeVertices = vertices.map((vertex) => mapVertexRelativeToCenter(point, vertex))
-        const firstVertex = relativeVertices.shift()
-        relativeVertices.push(firstVertex)
-
-        ctx.beginPath()
-        ctx.moveTo(firstVertex[0], firstVertex[1])
-        relativeVertices.forEach(([x, y]) => ctx.lineTo(x, y))
-        ctx.closePath()
-        ctx.fill()
-        ctx.stroke()
-    })
+Observable.combineLatest(point, vertices)
+    .pipe( tap(clearCanvas(theCanvas)) )
+    .subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
