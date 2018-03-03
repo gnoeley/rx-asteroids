@@ -1,10 +1,10 @@
 import keyPressed from './KeyPressedSource'
 import animationTimer from './AnimationTimer'
 import { clearCanvas, drawGeometry } from './Draw'
-import { calculateTranslation } from './GeometryFunctions'
+import { calculateTranslation, translate } from './GeometryFunctions'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
-import { filter, map, scan, startWith, tap, withLatestFrom } from 'rxjs/operators';
+import { filter, map, scan, startWith, takeWhile, tap, withLatestFrom } from 'rxjs/operators';
 import { combineLatest } from 'rxjs/operator/combineLatest';
 
 const theCanvas = document.getElementById('the-canvas')
@@ -36,6 +36,15 @@ const rotateAll = (vertices, angle) => {
     return vertices.map(vertex => rotate(vertex, R))
 }
 
+// Draw!
+const draw = (point, vertices) => 
+Observable.combineLatest(point, vertices)
+    // .pipe( tap(clearCanvas(theCanvas)) )
+    .subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
+
+/*
+    PLAYER !!!
+*/
 const point = new BehaviorSubject([400, 300])
 const vertices = new BehaviorSubject([[5, 5], [5, -5], [-5, -5], [-5, 5]])
 
@@ -72,11 +81,7 @@ const angle = deltaAngle.pipe(
 deltaDistance.pipe(
         withLatestFrom(angle, point),
         filter(([distance, angle, point]) => distance),
-        map(([distance, angle, point]) => {
-            const [tX, tY] = calculateTranslation(angle, distance)
-            const [pX, pY] = point
-            return [pX+tX, pY+tY]
-        })
+        map(([distance, angle, point]) => translate(point, calculateTranslation(angle, distance)))
     )
     .subscribe(point)
 
@@ -87,7 +92,30 @@ deltaAngle.pipe(
     )
     .subscribe(vertices)
 
-// Draw!
-Observable.combineLatest(point, vertices)
-    .pipe( tap(clearCanvas(theCanvas)) )
-    .subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
+draw(point, vertices)
+
+/*
+    BULLETS!!!
+*/
+const BULLET_VERTICES = [[1, 3], [1, -3], [-1, -3], [-1, 3]]
+const BULLET_SPEED = 200
+
+const shoot = (center, angle) => {
+    const point = new BehaviorSubject(center)
+    const vertices = new BehaviorSubject(rotateAll(BULLET_VERTICES, angle))
+
+    timer.pipe(
+        withLatestFrom(point),
+        map(([time, point]) => translate(point, calculateTranslation(angle, distance(BULLET_SPEED, time)))),
+        takeWhile(([pX, pY]) => (pX > 0 && pX < 800) && (pY > 0 && pY < 600))
+    ).subscribe(point)
+
+    draw(point, vertices)
+}
+
+keyPressed('l')
+    .pipe(
+        filter(isPressed => isPressed),
+        withLatestFrom(point, angle)
+    )
+    .subscribe(([_, point, angle]) => shoot(point, angle))
