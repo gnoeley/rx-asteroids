@@ -5,7 +5,14 @@ const calculateAdjacent = (angle, hypotenuse) => Math.cos(angle) * hypotenuse
 
 /**
  * Returns the translation from the origin (0, 0) for a point.
- *        +Y   .(1, 1) 
+ * 
+ * EXAMPLE:
+ * Given an angle θ=0.644rad and a distance d=5 the translation is calculated as follows
+ * 
+ * x = sin(0.644) * 5 = ≈3
+ * y = cos(0.644) * 5 = ≈4
+ * 
+ *        +Y   .(3, 4) 
  *         |  / 
  *         |θ/  
  * -X -----+----- +X
@@ -13,14 +20,17 @@ const calculateAdjacent = (angle, hypotenuse) => Math.cos(angle) * hypotenuse
  *         |
  *        -Y
  * 
+ * To allow for the calculation across all four quadrants, the provided angle is bound
+ * to the first quadrant using modulo division. The opposite and adjacent sides are then
+ * swapped as required and the values are negated to maintain the correct direction.
+ * 
  * @param {number} angle Angle of movement in radians 
- * @param {number} speed Speed of movement in units/s
- * @param {number} time Time moving in seconds
+ * @param {number} distance Distance travelled in arbritray units
  */
-export function calculateTranslation(angle, speed, time) {
+export function calculateTranslation(angle, distance) {
     const angleForFirstQuadrant = angle % QUADRANT_ANGLE
 
-    const hypotenuse = speed * time
+    const hypotenuse = distance
     const opposite = calculateOpposite(angleForFirstQuadrant, hypotenuse)
     const adjacent = calculateAdjacent(angleForFirstQuadrant, hypotenuse)
 
