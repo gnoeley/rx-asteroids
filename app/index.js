@@ -40,13 +40,13 @@ const rotateAll = (vertices, angle) => {
 // Draw!
 const drawSubject = new Subject()
 
-const draw = (point, vertices) => {
+const draw = (geom) => {
     const drawSubscription = drawSubject.pipe(
-        withLatestFrom(point, vertices),
-        map(([_, point, vertices]) => [point, vertices])
+        withLatestFrom(geom),
+        map(([_, geom]) => geom)
     ).subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
 
-    Observable.combineLatest(point, vertices).pipe(
+    geom.pipe(
         tap(clearCanvas(theCanvas))
     ).subscribe({
         next: () => drawSubject.next(), 
@@ -59,6 +59,10 @@ const draw = (point, vertices) => {
 */
 const point = new BehaviorSubject([400, 300])
 const vertices = new BehaviorSubject([[5, 5], [5, -5], [-5, -5], [-5, 5]])
+
+const playerGeom = Observable.combineLatest(point, vertices)
+    .multicast(new Subject())
+    .refCount()
 
 const timer = animationTimer()
     .pipe( map(millisToSeconds) )
@@ -104,7 +108,7 @@ deltaAngle.pipe(
     )
     .subscribe(vertices)
 
-draw(point, vertices)
+draw(playerGeom)
 
 /*
     BULLETS!!!
@@ -113,9 +117,12 @@ const BULLET_VERTICES = [[1, 3], [1, -3], [-1, -3], [-1, 3]]
 const BULLET_SPEED = 200
 
 const shoot = (center, angle) => {
-    angle
     const point = new BehaviorSubject(center)
-    const vertices = new BehaviorSubject(rotateAll(BULLET_VERTICES, angle))
+    const vertices = Observable.of(rotateAll(BULLET_VERTICES, angle))
+
+    const bulletGeom = Observable.combineLatest(point, vertices)
+        .multicast(new Subject())
+        .refCount()
 
     timer.pipe(
         withLatestFrom(point),
@@ -123,9 +130,7 @@ const shoot = (center, angle) => {
         takeWhile(([pX, pY]) => (pX > 0 && pX < 800) && (pY > 0 && pY < 600))
     ).subscribe(point)
 
-    point.subscribe({ complete: () => vertices.complete() })
-
-    draw(point, vertices)
+    draw(bulletGeom)
 }
 
 keyPressed('l')
