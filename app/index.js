@@ -1,7 +1,7 @@
 import keyPressed from './KeyPressedSource'
 import animationTimer from './AnimationTimer'
 import { clearCanvas, drawGeometry } from './Draw'
-import { calculateTranslation, translate } from './GeometryFunctions'
+import { calculateTranslation, translate, rotateClockwise } from './GeometryFunctions'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
@@ -21,21 +21,6 @@ const distance = (speed, time) => speed * time
 const millisToSeconds = (millis) => millis / 1000
 
 const limit = (value, min, max) => Math.max(Math.min(value, max), min)
-
-const counterClockwiseRotationMatrix = (angle) => [
-    Math.cos(angle),  -Math.sin(angle),
-    Math.sin(angle), Math.cos(angle)
-]
-
-const rotate = ([x, y], R) => [
-        R[0]*x + R[1]*y,
-        R[2]*x + R[3]*y
-    ]
-
-const rotateAll = (vertices, angle) => {
-    const R = counterClockwiseRotationMatrix(angle)
-    return vertices.map(vertex => rotate(vertex, R))
-}
 
 // Draw!
 const drawSubject = new Subject()
@@ -104,7 +89,7 @@ deltaDistance.pipe(
 // Update vertices subject
 deltaAngle.pipe(
         withLatestFrom(vertices),
-        map(([deltaAngle, vertices]) => rotateAll(vertices, deltaAngle))
+        map(([deltaAngle, vertices]) => rotateClockwise(deltaAngle, ...vertices))
     )
     .subscribe(vertices)
 
@@ -118,7 +103,7 @@ const BULLET_SPEED = 200
 
 const shoot = (center, angle) => {
     const point = new BehaviorSubject(center)
-    const vertices = Observable.of(rotateAll(BULLET_VERTICES, angle))
+    const vertices = Observable.of(rotateClockwise(angle, ...BULLET_VERTICES))
 
     const bulletGeom = Observable.combineLatest(point, vertices)
         .multicast(new Subject())
