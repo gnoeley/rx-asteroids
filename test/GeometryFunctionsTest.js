@@ -76,4 +76,21 @@ describe('GeomeryFunctions', () => {
 
     })
 
+    describe('#rotateClockwise(angle, ...vertices)', () => {
+
+        it('should rotate all angles', () => {
+            // given
+            const vertices = [[3, 3], [-3, -3]]
+            const angle = 0.5 * Math.PI
+            const expectedVertices = [[3, -3], [-3, 3]]
+
+            // when
+            const actualPoints = testSubject.rotateClockwise(angle, ...vertices)
+
+            // then
+            expect(actualPoints).toEqual(expectedVertices)
+        })
+
+    })
+
 })

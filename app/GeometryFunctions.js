@@ -3,6 +3,17 @@ const QUADRANT_ANGLE = Math.PI / 2
 const calculateOpposite = (angle, hypotenuse) => Math.sin(angle) * hypotenuse
 const calculateAdjacent = (angle, hypotenuse) => Math.cos(angle) * hypotenuse
 
+
+const counterClockwiseRotationMatrix = (angle) => [
+    Math.cos(angle),  -Math.sin(angle),
+    Math.sin(angle), Math.cos(angle)
+]
+
+const multiplyMatrix = ([x, y], R) => [
+        R[0]*x + R[1]*y,
+        R[2]*x + R[3]*y
+    ]
+
 /**
  * Returns the translation from the origin (0, 0) for a point.
  * 
@@ -52,4 +63,9 @@ export function translateToScreenCoordSpace([x, y]) {
 
 export function translate([pX, pY], [tX, tY]) {
     return [pX+tX, pY+tY]
+}
+
+export function rotateClockwise(angle, ...vertices) {
+    const R = counterClockwiseRotationMatrix(-angle)
+    return vertices.map(vertex => multiplyMatrix(vertex, R))
 }
