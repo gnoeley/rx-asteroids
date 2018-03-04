@@ -4,7 +4,8 @@ import { clearCanvas, drawGeometry } from './Draw'
 import { calculateTranslation, translate } from './GeometryFunctions'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
-import { filter, map, scan, startWith, takeWhile, tap, withLatestFrom } from 'rxjs/operators';
+import { Subject } from 'rxjs/Subject'
+import { filter, map, scan, startWith, switchMapTo, takeWhile, tap, withLatestFrom, finalize } from 'rxjs/operators';
 import { combineLatest } from 'rxjs/operator/combineLatest';
 
 const theCanvas = document.getElementById('the-canvas')
@@ -37,10 +38,21 @@ const rotateAll = (vertices, angle) => {
 }
 
 // Draw!
-const draw = (point, vertices) => 
-Observable.combineLatest(point, vertices)
-    // .pipe( tap(clearCanvas(theCanvas)) )
-    .subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
+const drawSubject = new Subject()
+
+const draw = (point, vertices) => {
+    const drawSubscription = drawSubject.pipe(
+        withLatestFrom(point, vertices),
+        map(([_, point, vertices]) => [point, vertices])
+    ).subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
+
+    Observable.combineLatest(point, vertices).pipe(
+        tap(clearCanvas(theCanvas))
+    ).subscribe({
+        next: () => drawSubject.next(), 
+        complete: () => drawSubscription.unsubscribe()
+    })
+}
 
 /*
     PLAYER !!!
@@ -101,6 +113,7 @@ const BULLET_VERTICES = [[1, 3], [1, -3], [-1, -3], [-1, 3]]
 const BULLET_SPEED = 200
 
 const shoot = (center, angle) => {
+    angle
     const point = new BehaviorSubject(center)
     const vertices = new BehaviorSubject(rotateAll(BULLET_VERTICES, angle))
 
@@ -109,6 +122,8 @@ const shoot = (center, angle) => {
         map(([time, point]) => translate(point, calculateTranslation(angle, distance(BULLET_SPEED, time)))),
         takeWhile(([pX, pY]) => (pX > 0 && pX < 800) && (pY > 0 && pY < 600))
     ).subscribe(point)
+
+    point.subscribe({ complete: () => vertices.complete() })
 
     draw(point, vertices)
 }
