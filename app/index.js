@@ -10,6 +10,8 @@ import { combineLatest } from 'rxjs/operator/combineLatest';
 
 const theCanvas = document.getElementById('the-canvas')
 
+const FULL_ROTATION = 2 * Math.PI
+
 const MIN_SPEED = 0 // px/s
 const MAX_SPEED = 100 // px/s
 
@@ -71,9 +73,8 @@ const deltaAngle = timer.pipe(
 // Keep track of our total rotation
 const angle = deltaAngle.pipe(
         scan((currentAngle, rotation) => {
-            const nextAngle = currentAngle - rotation
-            const fullRotation = 2 * Math.PI
-            return nextAngle < 0 ? nextAngle + fullRotation : nextAngle % fullRotation 
+            const nextAngle = currentAngle + rotation
+            return nextAngle < 0 ? nextAngle + FULL_ROTATION : nextAngle % FULL_ROTATION 
         }, 0),
         startWith(0)
     )

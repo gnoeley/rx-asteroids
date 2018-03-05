@@ -1,5 +1,8 @@
 import { translate } from './GeometryFunctions'
 
+const toScreenCoord = (canvasHeight, [x, y]) => [x, canvasHeight - y]
+const invertY = ([x, y]) => [x, -y]
+
 export const clearCanvas = (canvas) => () => {
     const ctx = canvas.getContext("2d")
     ctx.fillStyle = '#000'
@@ -12,7 +15,9 @@ export const drawGeometry = (canvas) => (center, vertices) => {
     ctx.fillStyle = '#000'
     ctx.lineWidth = 2
 
-    const relativeVertices = vertices.map((vertex) => translate(center, vertex))
+    const centerTranslatedForCanvas = toScreenCoord(canvas.height, center)
+    const relativeVertices = vertices.map((vertex) => 
+            translate(centerTranslatedForCanvas, invertY(vertex)))
     const firstVertex = relativeVertices.shift()
     relativeVertices.push(firstVertex)
 
