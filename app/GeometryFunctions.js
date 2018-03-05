@@ -55,10 +55,6 @@ export function calculateTranslation(angle, distance) {
     const distanceInY = (swapSides ? opposite : adjacent) * directionInY
 
     return [distanceInX, distanceInY]
-}   
-
-export function translateToScreenCoordSpace([x, y]) {
-    return [x, -y]
 }
 
 export function translate([pX, pY], [tX, tY]) {
@@ -68,4 +64,8 @@ export function translate([pX, pY], [tX, tY]) {
 export function rotateClockwise(angle, ...vertices) {
     const R = counterClockwiseRotationMatrix(-angle)
     return vertices.map(vertex => multiplyMatrix(vertex, R))
+}
+
+export function distance(speed, time) {
+    return speed * time
 }

@@ -35,28 +35,19 @@ describe('GeomeryFunctions', () => {
 
     })
 
-    describe('#translateToScreenCoordSpace(point)', () => {
+    describe('#distance(speed, time)', () => {
 
-        it('should negate for positive Y value', () => {
+        it('should return expected distance', () => {
             // given
-            const point = [10, 10]
+            const speed = 10 //m/s
+            const time = 6.5 //s
+            const expectedDistance = 65 //m
 
             // when
-            const actualPoint = testSubject.translateToScreenCoordSpace(point)
+            const actualDistance = testSubject.distance(speed, time)
 
             // then
-            expect(actualPoint).toEqual([10, -10])
-        })
-
-        it('should negate for negative Y value', () => {
-            // given
-            const point = [10, -10]
-
-            // when
-            const actualPoint = testSubject.translateToScreenCoordSpace(point)
-
-            // then
-            expect(actualPoint).toEqual([10, 10])
+            expect(actualDistance).toEqual(expectedDistance)
         })
 
     })
