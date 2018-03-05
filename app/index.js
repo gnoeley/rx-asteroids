@@ -1,14 +1,16 @@
-import keyPressed from './KeyPressedSource'
-import animationTimer from './AnimationTimer'
-import { clearCanvas, drawGeometry } from './Draw'
-import { calculateTranslation, distance, translate, rotateClockwise } from './GeometryFunctions'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
 import { Observable } from 'rxjs/Observable'
 import { Subject } from 'rxjs/Subject'
-import { filter, map, scan, takeWhile, tap, withLatestFrom } from 'rxjs/operators';
+import { filter, map, takeWhile, withLatestFrom } from 'rxjs/operators';
+
+import keyPressed from './KeyPressedSource'
+import animationTimer from './AnimationTimer'
+import { drawGeometryObservable as draw } from './Draw'
+import { calculateTranslation, distance, translate, rotateClockwise } from './GeometryFunctions'
 import PlayerShip from './PlayerShip'
 
 const theCanvas = document.getElementById('the-canvas')
+const drawToCanvas = draw(theCanvas)
 
 const millisToSeconds = (millis) => millis / 1000
 
@@ -16,25 +18,8 @@ const timer = animationTimer()
     .pipe( map(millisToSeconds) )
     .share()
 
-// Draw!
-const drawSubject = new Subject()
-
-const draw = (geom) => {
-    const drawSubscription = drawSubject.pipe(
-        withLatestFrom(geom),
-        map(([_, geom]) => geom)
-    ).subscribe(([point, vertices]) => drawGeometry(theCanvas)(point, vertices))
-
-    geom.pipe(
-        tap(clearCanvas(theCanvas))
-    ).subscribe({
-        next: () => drawSubject.next(), 
-        complete: () => drawSubscription.unsubscribe()
-    })
-}
-
 const playerShip = new PlayerShip(timer)
-draw(playerShip.geometry)
+drawToCanvas(playerShip.geometry)
 
 /*
     BULLETS!!!
@@ -56,7 +41,7 @@ const shoot = (center, angle) => {
         takeWhile(([pX, pY]) => (pX > 0 && pX < 800) && (pY > 0 && pY < 600))
     ).subscribe(point)
 
-    draw(bulletGeom)
+    drawToCanvas(bulletGeom)
 }
 
 keyPressed('l')
